@@ -5,9 +5,9 @@
 - **Project Name:** `spike-compose`
 - **Template:** Choose `Empty Activity`
 
-**Step 2:** Update dependencies in `build.gradle` (Module: `app`):
+**Step 2:** Update dependencies:
 
-Ensure that the following dependencies are added:
+Ensure that the following dependencies are added in `build.gradle` (Module: `app`):
 
 ```gradle
 dependencies {
@@ -22,6 +22,24 @@ dependencies {
     // ...
 }
 ```
+
+Ensure you have a corresponding version defined in libs.versions.toml:
+
+```gradle
+[versions]
+// ...
+navigationCompose = "2.7.7"
+lifecycleViewmodelCompose = "2.8.3"
+
+
+[libraries]
+// ...
+androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
+androidx-lifecycle-viewmodel-compose = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-compose", version.ref = "lifecycleViewmodelCompose" }
+```
+
+You can find the latest versions on the AndroidX Releases page.
+
 
 ### 2. Create the `GameViewModel`
 
