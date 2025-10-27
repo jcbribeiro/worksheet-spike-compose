@@ -239,12 +239,13 @@ class MainActivity : ComponentActivity() {
 ```
 
 ### 7. To Learn More
+
 - Jetpack Compose Tutorial
-    https://developer.android.com/develop/ui/compose/tutorial
-    A quick tutorial to get started.
+    - https://developer.android.com/develop/ui/compose/tutorial
+    - A quick tutorial to get started.
 - Learn the Kotlin programming language
-    https://developer.android.com/kotlin/learn
-    A Kotlin crash-course.
+    - https://developer.android.com/kotlin/learn
+    - A Kotlin crash-course.
 - Android Basics with Compose
-    https://developer.android.com/courses/android-basics-compose/course
-    Self-paced online course.
+    - https://developer.android.com/courses/android-basics-compose/course
+    - Self-paced online course.
