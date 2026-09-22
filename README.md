@@ -1,49 +1,62 @@
-### 1. Project Setup
+## Jetpack Compose Practical Worksheet: Building a Spike Game App
 
-**Step 1:** Create a new Android project using Android Studio:
+This worksheet is a practical spike to explore the fundamentals of **Jetpack Compose** on Android. The app tracks game statistics (played and won counts) across a simple two-screen flow using a shared `ViewModel` and navigation.
 
-- **Project Name:** `spike-compose`
-- **Template:** Choose `Empty Activity`
+### 0. Project Setup
 
-**Step 2:** Update dependencies:
+1. Open **Android Studio** → **File > New > New Project…**
+2. Template: **Empty Activity**
+3. Name: **spike-compose**
+4. Language: **Kotlin**
+5. Build configuration language: **Kotlin DSL (`build.gradle.kts`)**
 
-Ensure that the following dependencies are added in `build.gradle` (Module: `app`):
+Android Studio will configure the Compose BOM and core libraries. Update your Version Catalog and dependencies to include Navigation and Lifecycle ViewModel Compose.
 
-```gradle
+In `gradle/libs.versions.toml`:
+
+```toml
+[versions]
+navigationCompose = "2.7.7"
+lifecycleViewmodelCompose = "2.8.3"
+
+[libraries]
+androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
+androidx-lifecycle-viewmodel-compose = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-compose", version.ref = "lifecycleViewmodelCompose" }
+
+```
+
+In `app/build.gradle.kts`:
+
+```kotlin
 dependencies {
-    // ...
-
     // Navigation Compose dependency
     implementation(libs.androidx.navigation.compose)
 
     // Lifecycle ViewModel Compose dependency
     implementation(libs.androidx.lifecycle.viewmodel.compose)
-
-    // ...
 }
+
 ```
 
-Ensure you have a corresponding version defined in libs.versions.toml:
+> #### Imperative XML vs Declarative Compose
+> 
+> 
+> * **View System / XML**: you define layouts in XML trees and mutate them imperatively in code (`findViewById`, `setText()`).
+> * **Jetpack Compose**: you **describe** the UI in Kotlin functions annotated with `@Composable`; the UI is a *function of state*.
+> * Key idea: **when state changes, Compose automatically recomposes** affected composables.
+> 
+> 
+> Docs:
+> * Jetpack Compose Tutorial — [https://developer.android.com/develop/ui/compose/tutorial]
+> * Compose State and Jetpack Compose Lifecycle — [https://developer.android.com/develop/ui/compose/state]
+> 
+> 
 
-```gradle
-[versions]
-// ...
-navigationCompose = "2.7.7"
-lifecycleViewmodelCompose = "2.8.3"
+---
 
+## 1. ViewModel & State
 
-[libraries]
-// ...
-androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
-androidx-lifecycle-viewmodel-compose = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-compose", version.ref = "lifecycleViewmodelCompose" }
-```
-
-You can find the latest versions on the AndroidX Releases page.
-
-
-### 2. Create the `GameViewModel`
-
-Create a file named `GameViewModel.kt`:
+Create a new file named `GameViewModel.kt`:
 
 ```kotlin
 import androidx.compose.runtime.getValue
@@ -71,11 +84,30 @@ class GameViewModel : ViewModel() {
     wonGames = 0
   }
 }
+
 ```
 
-### 3. Define the App's Navigation
+> #### `ViewModel`, `mutableStateOf`, and Encapsulation
+> 
+> 
+> * `ViewModel`: survives configuration changes (such as screen rotations) and holds business state for the UI lifecycle.
+> * `mutableStateOf(x)`: creates an observable snapshot state holder. When read inside a composable, Compose subscribes to changes; when written to, it triggers **recomposition**.
+> * `private set`: exposes read-only values to the UI while ensuring mutations only occur through explicit methods (`incrementPlayedGames()`), establishing **Unidirectional Data Flow (UDF)**.
+> 
+> 
+> 
+> 
+> Docs:
+> * [https://developer.android.com/topic/libraries/architecture/viewmodel](https://developer.android.com/topic/libraries/architecture/viewmodel)
+> * [https://developer.android.com/develop/ui/compose/state#state-in-viewmodels](https://www.google.com/search?q=https://developer.android.com/develop/ui/compose/state%2523state-in-viewmodels)
+> 
+> 
 
-Create a file named `Navigation.kt`:
+---
+
+## 2. Navigation Host
+
+Create a new file named `Navigation.kt`:
 
 ```kotlin
 import androidx.compose.runtime.Composable
@@ -100,11 +132,26 @@ fun AppNavHost(navController: NavHostController, viewModel: GameViewModel) {
     }
   }
 }
+
 ```
 
-### 4. Implement the Landing Screen
+> #### Navigation in Jetpack Compose
+> 
+> 
+> * `NavHostController`: the central coordinator that tracks the backstack and performs transitions between destinations.
+> * `NavHost`: links the controller with a navigation graph that maps route strings (e.g. `"landing"`, `"game"`) to composable destinations.
+> 
+> 
+> Docs:
+> * [https://developer.android.com/develop/ui/compose/navigation](https://developer.android.com/develop/ui/compose/navigation)
+> 
+> 
 
-Create a file named `LandingScreen.kt`:
+---
+
+## 3. Landing Screen (Main Screen)
+
+Create a new file named `LandingScreen.kt`:
 
 ```kotlin
 import androidx.compose.foundation.layout.*
@@ -113,11 +160,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontStyle
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 
@@ -142,6 +186,7 @@ fun LandingScreen(
   }
 }
 
+// MARK: - Preview
 @Preview(showBackground = true)
 @Composable
 fun LandingScreenPreview() {
@@ -149,11 +194,22 @@ fun LandingScreenPreview() {
   val mockViewModel = GameViewModel()
   LandingScreen(viewModel = mockViewModel, navController = mockNavController)
 }
+
 ```
 
-### 5. Implement the Game Screen
+> #### Layout Basics: Column, Row, and Modifiers
+> 
+> 
+> * `Column`: positions items vertically, equivalent to a vertical `LinearLayout`.
+> * `Modifier`: the standard mechanism in Compose to configure element size, padding, layout behavior, and styling (e.g., `Modifier.fillMaxSize()`).
+> 
+> 
 
-Create a file named `GameScreen.kt`:
+---
+
+## 4. Game Screen & Reusable Component
+
+Create a new file named `GameScreen.kt`:
 
 ```kotlin
 import androidx.compose.foundation.layout.*
@@ -205,6 +261,7 @@ fun ToggleButton(isChecked: Boolean, onCheckedChange: (Boolean) -> Unit) {
   }
 }
 
+// MARK: - Preview
 @Preview(showBackground = true)
 @Composable
 fun GameScreenPreview() {
@@ -212,11 +269,33 @@ fun GameScreenPreview() {
   val mockViewModel = GameViewModel()
   GameScreen(viewModel = mockViewModel, navController = mockNavController)
 }
+
 ```
 
-### 6. Update the Main Activity
+> #### Local State (`remember`) and State Hoisting
+> 
+> 
+> * `remember { mutableStateOf(...) }`: allocates and stores state in the composition memory. It survives recompositions during the lifetime of the screen, but is reset once the screen leaves the composition (or backstack).
+> 
+> 
+> * State Hoisting (`ToggleButton`): `ToggleButton` does not own its state. It receives a value (`isChecked`) and emits an event (`onCheckedChange`). This makes the component stateless, testable, and reusable.
+> 
+> 
+> * `navController.popBackStack()`: pops the current destination off the backstack and returns to the previous screen.
+> 
+> 
+> 
+> 
+> Docs:
+> * [https://developer.android.com/develop/ui/compose/state#state-hoisting](https://developer.android.com/develop/ui/compose/state#state-hoisting)
+> 
+> 
 
-Modify the `MainActivity.kt` file:
+---
+
+## 5. App Entry Point
+
+Edit `MainActivity.kt` to bind the ViewModel lifecycle to the activity and initialize the Compose UI tree:
 
 ```kotlin
 import android.os.Bundle
@@ -236,16 +315,15 @@ class MainActivity : ComponentActivity() {
     }
   }
 }
+
 ```
 
-### 7. To Learn More
+---
 
-- Jetpack Compose Tutorial
-    - https://developer.android.com/develop/ui/compose/tutorial
-    - A quick tutorial to get started.
-- Learn the Kotlin programming language
-    - https://developer.android.com/kotlin/learn
-    - A Kotlin crash-course.
-- Android Basics with Compose
-    - https://developer.android.com/courses/android-basics-compose/course
-    - Self-paced online course.
+## 6. To Learn More
+
+* Jetpack Compose Tutorial: [https://developer.android.com/develop/ui/compose/tutorial](https://developer.android.com/develop/ui/compose/tutorial)
+
+* Kotlin Crash-Course: [https://developer.android.com/kotlin/learn](https://developer.android.com/kotlin/learn)
+
+* Android Basics with Compose (Guided Path): [https://developer.android.com/courses/android-basics-compose/course](https://developer.android.com/courses/android-basics-compose/course)
