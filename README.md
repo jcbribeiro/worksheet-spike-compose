@@ -41,9 +41,9 @@ dependencies {
 > #### Imperative XML vs Declarative Compose
 > 
 > 
-> * **View System / XML**: you define layouts in XML trees and mutate them imperatively in code (`findViewById`, `setText()`).
-> * **Jetpack Compose**: you **describe** the UI in Kotlin functions annotated with `@Composable`; the UI is a *function of state*.
-> * Key idea: **when state changes, Compose automatically recomposes** affected composables.
+> * **View System / XML**: In the imperative paradigm, you define the layout structure separately in an XML file and then write code (Kotlin or Java) that explicitly instructs the system step-by-step how to manipulate and mutate those UI widgets.
+> * **Jetpack Compose**: In the declarative paradigm, you do not manipulate existing UI widgets directly. Instead, you describe what the UI should look like for a given state, expressing the UI as a function of state.
+> * Key idea: when state changes, Compose automatically recomposes affected composables. e.g., in `LandingScreen.kt`, the UI describes what to display based on the current values of `viewModel.playedGames` and `viewModel.wonGames`.
 > 
 > 
 > Docs:
@@ -87,19 +87,17 @@ class GameViewModel : ViewModel() {
 
 ```
 
-> #### `ViewModel`, `mutableStateOf`, and Encapsulation
+> #### `ViewModel`
 > 
 > 
-> * `ViewModel`: survives configuration changes (such as screen rotations) and holds business state for the UI lifecycle.
-> * `mutableStateOf(x)`: creates an observable snapshot state holder. When read inside a composable, Compose subscribes to changes; when written to, it triggers **recomposition**.
-> * `private set`: exposes read-only values to the UI while ensuring mutations only occur through explicit methods (`incrementPlayedGames()`), establishing **Unidirectional Data Flow (UDF)**.
-> 
+> * `ViewModel`: an architectural component designed to store and manage UI-related data in a lifecycle-conscious way. It acts as a bridge between the business logic and the UI screens, ensuring that data is preserved and state updates remain predictable. e.g., `GameViewModel` manages the game's persistent statistics across the app's two screens; a single `GameViewModel` instance is passed through `AppNavHost` to both `LandingScreen` and `GameScreen`; when the game concludes in `GameScreen`, the win is written to this shared instance and is immediately reflected upon returning to `LandingScreen`.
+> * `mutableStateOf(x)`: creates an observable snapshot state holder. When read inside a composable, Compose subscribes to changes; when written to, it triggers recomposition. 
 > 
 > 
 > 
 > Docs:
-> * [https://developer.android.com/topic/libraries/architecture/viewmodel](https://developer.android.com/topic/libraries/architecture/viewmodel)
-> * [https://developer.android.com/develop/ui/compose/state#state-in-viewmodels](https://www.google.com/search?q=https://developer.android.com/develop/ui/compose/state%2523state-in-viewmodels)
+> * [https://developer.android.com/topic/libraries/architecture/viewmodel]
+> * [https://developer.android.com/develop/ui/compose/state#state-in-viewmodels]
 > 
 > 
 
@@ -138,12 +136,13 @@ fun AppNavHost(navController: NavHostController, viewModel: GameViewModel) {
 > #### Navigation in Jetpack Compose
 > 
 > 
-> * `NavHostController`: the central coordinator that tracks the backstack and performs transitions between destinations.
-> * `NavHost`: links the controller with a navigation graph that maps route strings (e.g. `"landing"`, `"game"`) to composable destinations.
+> * In Jetpack Compose, screen-to-screen navigation is managed by the Navigation Compose library. Navigation is achieved by mapping composable functions directly to an internal navigation backstack.
+> * The architecture relies on three core components: the `NavHostController`, the `NavHost` container, and the navigation graph defined using `composable()` destinations. The `rememberNavController()` call ensures the controller survives recompositions within the UI hierarchy.
+> * e.g., `navController.navigate("game")` pushes a new destination onto the top of the backstack; `navController.popBackStack()` removes the top destination from the stack and returns to the previous screen.   
 > 
 > 
 > Docs:
-> * [https://developer.android.com/develop/ui/compose/navigation](https://developer.android.com/develop/ui/compose/navigation)
+> * [https://developer.android.com/develop/ui/compose/navigation]
 > 
 > 
 
@@ -197,11 +196,16 @@ fun LandingScreenPreview() {
 
 ```
 
-> #### Layout Basics: Column, Row, and Modifiers
+> #### Layout Basics
 > 
 > 
-> * `Column`: positions items vertically, equivalent to a vertical `LinearLayout`.
-> * `Modifier`: the standard mechanism in Compose to configure element size, padding, layout behavior, and styling (e.g., `Modifier.fillMaxSize()`).
+> * In Jetpack Compose, UI layouts are built by nesting declarative composable functions and decorating them with modifiers.
+> * `Column`: Places its children sequentially in a vertical stack (equivalent to a vertical LinearLayout). e.g., both LandingScreen and GameScreen use Column as their root layout to position text, spacers, and buttons from top to bottom
+> * `Row`: Places its children side-by-side in a horizontal line.
+> * Inside containers like `Column` or `Row`, spatial distribution is handled along two separate axes: `Arrangement` governs how items are distributed along the container's primary direction (for a Column, the main axis is vertical); `Alignment` governs how items are positioned perpendicular to the primary direction (for a Column, the cross axis is horizontal).
+> * `Spacer`: Rather than applying individual XML margins to views, Compose uses the `Spacer` composable to introduce explicit negative space between adjacent elements.
+> * `Modifier`: the standard mechanism in Compose to configure element size, padding, layout behavior (like click actions), and styling (e.g., `Modifier.fillMaxSize()`).
+> * The `@Preview` annotation allows developers to render and inspect composable functions directly inside Android Studio without deploying or running the application on an emulator or physical device.
 > 
 > 
 
@@ -272,22 +276,11 @@ fun GameScreenPreview() {
 
 ```
 
-> #### Local State (`remember`) and State Hoisting
+> #### Local State
 > 
 > 
 > * `remember { mutableStateOf(...) }`: allocates and stores state in the composition memory. It survives recompositions during the lifetime of the screen, but is reset once the screen leaves the composition (or backstack).
-> 
-> 
-> * State Hoisting (`ToggleButton`): `ToggleButton` does not own its state. It receives a value (`isChecked`) and emits an event (`onCheckedChange`). This makes the component stateless, testable, and reusable.
-> 
-> 
-> * `navController.popBackStack()`: pops the current destination off the backstack and returns to the previous screen.
-> 
-> 
-> 
-> 
-> Docs:
-> * [https://developer.android.com/develop/ui/compose/state#state-hoisting](https://developer.android.com/develop/ui/compose/state#state-hoisting)
+> * `by` delegates getter and setter access, e.g, so `toggleState1` can be used directly as a primitive Boolean.
 > 
 > 
 
